@@ -39,6 +39,11 @@ export type StringWithRawData = string & {
     _strs: TemplateStringsArray;
     _exprs: unknown[];
 };
+
+export function isMsgid(arg: string | StringWithRawData): arg is StringWithRawData {
+    return typeof arg === 'string' && !!(arg as any)._strs && !!(arg as any)._exprs;
+}
+
 export function msgid(strings: TemplateStringsArray, ...exprs: (string | number)[]): StringWithRawData {
     if (strings && 'reduce' in strings) {
         const result: StringWithRawData = new String(buildStr(strings, exprs)) as StringWithRawData;
@@ -181,7 +186,8 @@ export class TTag {
         return pluralFn(n, forms);
     };
 
-    public gettext = (id: string) => {
+    public gettext = (arg: string | StringWithRawData) => {
+        const id = isMsgid(arg) ? this.maybeDedent(getMsgid(arg._strs, arg._exprs)) : arg;
         const context = this.ctx.getContext();
         const trans = this.findTranslation(id, context);
         return trans ? trans[0] : id;
